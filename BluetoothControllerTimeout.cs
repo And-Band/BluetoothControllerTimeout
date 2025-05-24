@@ -6,9 +6,9 @@ using System.Text.RegularExpressions;
 
 class BluetoothControllerTimeout
 {
-    static readonly TimeSpan TimeoutLength = TimeSpan.FromMinutes(0.2);
-    static readonly TimeSpan InputUpdateInterval = TimeSpan.FromSeconds(4);
-    static readonly TimeSpan SearchInterval = TimeSpan.FromMinutes(0.05);
+    static readonly TimeSpan TimeoutLength = TimeSpan.FromMinutes(5);
+    static readonly TimeSpan InputUpdateInterval = TimeSpan.FromSeconds(10);
+    static readonly TimeSpan SearchInterval = TimeSpan.FromMinutes(1);
 
     static Dictionary<string, ControlerTimeout> Joysticks = [];
 
