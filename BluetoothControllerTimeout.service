@@ -1,0 +1,11 @@
+[Unit]
+Description=Automatically disconnect wireless game controllers after inactivity.
+
+[Service]
+ExecStart=[EXECUTABLE FILE PATH]
+Type=simple
+Restart=on-failure
+RestartSec=20s
+
+[Install]
+WantedBy=default.target
