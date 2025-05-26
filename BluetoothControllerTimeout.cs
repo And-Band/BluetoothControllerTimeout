@@ -7,8 +7,8 @@ using System.Text.RegularExpressions;
 class BluetoothControllerTimeout
 {
     static readonly TimeSpan TimeoutLength = TimeSpan.FromMinutes(5);
-    static readonly TimeSpan InputUpdateInterval = TimeSpan.FromSeconds(10);
-    static readonly TimeSpan SearchInterval = TimeSpan.FromMinutes(1);
+    static readonly TimeSpan InputUpdateInterval = TimeSpan.FromSeconds(15);
+    static readonly TimeSpan SearchInterval = TimeSpan.FromMinutes(2);
 
     static Dictionary<string, ControlerTimeout> Joysticks = [];
 
@@ -111,7 +111,9 @@ class BluetoothControllerTimeout
                     {
                         _Timer.Stop();
                         _Timer.Start();
-                        Console.WriteLine($"'{Uuiq}'Timer reset");
+                        #if DEBUG
+                            Console.WriteLine($"'{Uuiq}' Timer reset");
+                        #endif
                     }
 
                     await Task.Delay(InputUpdateInterval);

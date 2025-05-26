@@ -1,5 +1,5 @@
 [Unit]
-Description=Automatically disconnect wireless game controllers after inactivity.
+Description=BluetoothControllerTimeout. Automatically disconnect wireless game controllers after inactivity.
 
 [Service]
 ExecStart=[EXECUTABLE FILE PATH]
