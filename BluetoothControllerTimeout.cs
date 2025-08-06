@@ -238,8 +238,13 @@ class BluetoothControllerTimeout
 
     static async Task<bool> BluetoothEnabled()
     {
-        try { await BlueZManager.GetAdaptersAsync(); }
+        try
+        {
+            var adapters = await BlueZManager.GetAdaptersAsync();
+            if (adapters.Count > 0)
+                return true;
+        }
         catch { return false; }
-        return true;
+        return false;
     }
 }
