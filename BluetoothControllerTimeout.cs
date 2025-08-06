@@ -20,28 +20,31 @@ class BluetoothControllerTimeout
 
         while (true)
         {
-            var _Joysticks = Joysticks;
-            //Console.WriteLine($"Joysticks.Count = " + _Joysticks.Count);
-
-            var newJoys = await GetBluetoothJoySticks();
-            foreach (var pair in newJoys)
+            if (await BluetoothEnabled())
             {
-                if (!Joysticks.ContainsKey(pair.Key))
-                {
-                    var controllerTimeout = new ControlerTimeout(pair.Key, pair.Value.controller, pair.Value.device);
-                    Joysticks.Add(pair.Key, controllerTimeout);
-                    Joysticks[pair.Key].TimeoutReached += (s, e) =>
-                    {
-                        Console.WriteLine($"Controller '{e.Uuiq}' reached timeout.");
-                        Joysticks.Remove(e.Uuiq);
-                    };
-                    Joysticks[pair.Key].Disposed += (s, e) =>
-                    {
-                        if (Joysticks.Remove(e.Uuiq))
-                            Console.WriteLine($"Lost controller '{e.Uuiq}'.");
-                    };
+                var _Joysticks = Joysticks;
+                //Console.WriteLine($"Joysticks.Count = " + _Joysticks.Count);
 
-                    Console.WriteLine($"Found controller '{pair.Key}'.");
+                var newJoys = await GetBluetoothJoySticks();
+                foreach (var pair in newJoys)
+                {
+                    if (!Joysticks.ContainsKey(pair.Key))
+                    {
+                        var controllerTimeout = new ControlerTimeout(pair.Key, pair.Value.controller, pair.Value.device);
+                        Joysticks.Add(pair.Key, controllerTimeout);
+                        Joysticks[pair.Key].TimeoutReached += (s, e) =>
+                        {
+                            Console.WriteLine($"Controller '{e.Uuiq}' reached timeout.");
+                            Joysticks.Remove(e.Uuiq);
+                        };
+                        Joysticks[pair.Key].Disposed += (s, e) =>
+                        {
+                            if (Joysticks.Remove(e.Uuiq))
+                                Console.WriteLine($"Lost controller '{e.Uuiq}'.");
+                        };
+
+                        Console.WriteLine($"Found controller '{pair.Key}'.");
+                    }
                 }
             }
 
@@ -54,7 +57,7 @@ class BluetoothControllerTimeout
         public readonly string Uuiq;
         public readonly GamepadController Controller;
         public readonly Linux.Bluetooth.Device Device;
-        public bool IsDisposed { get; private set;}
+        public bool IsDisposed { get; private set; }
 
         public EventHandler<ControlerTimeout>? TimeoutReached;
         public EventHandler<ControlerTimeout>? Disposed;
@@ -68,7 +71,7 @@ class BluetoothControllerTimeout
             Device = device;
 
             IsDisposed = false;
-            Device.Disconnected += (s,e) => { Dispose(); return Task.CompletedTask; };
+            Device.Disconnected += (s, e) => { Dispose(); return Task.CompletedTask; };
 
             _Timer = new(TimeoutLength) { AutoReset = false };
             _Timer.Elapsed += OnTimeoutReached;
@@ -111,9 +114,9 @@ class BluetoothControllerTimeout
                     {
                         _Timer.Stop();
                         _Timer.Start();
-                        #if DEBUG
-                            Console.WriteLine($"'{Uuiq}' Timer reset");
-                        #endif
+#if DEBUG
+                        Console.WriteLine($"'{Uuiq}' Timer reset");
+#endif
                     }
 
                     await Task.Delay(InputUpdateInterval);
@@ -209,21 +212,34 @@ class BluetoothControllerTimeout
 
     static async Task<Device?> FindDeviceFromUuiq(string uuiq)
     {
-        var adapters = await BlueZManager.GetAdaptersAsync();
-        foreach (var adapter in adapters)
+        try
         {
-            var devices = await adapter.GetDevicesAsync();
-            foreach (var device in devices)
+            var adapters = await BlueZManager.GetAdaptersAsync();
+
+            foreach (var adapter in adapters)
             {
-                string addr = await device.GetAddressAsync();
-                if (string.Compare(addr, uuiq, true) == 0)
+                var devices = await adapter.GetDevicesAsync();
+                foreach (var device in devices)
                 {
-                    return device;
-                }
+                    string addr = await device.GetAddressAsync();
+                    if (string.Compare(addr, uuiq, true) == 0)
+                    {
+                        return device;
+                    }
+                };
             };
-        };
-        return null;
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
-
+    static async Task<bool> BluetoothEnabled()
+    {
+        try { await BlueZManager.GetAdaptersAsync(); }
+        catch { return false; }
+        return true;
+    }
 }
